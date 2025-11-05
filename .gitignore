@@ -1,0 +1,96 @@
+# ===========================================
+# 🧠 GLOBAL GITIGNORE FOR TASKFLOW PROJECT
+# ===========================================
+
+# ---- OS & Editor ----
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*.tmp
+.vscode/
+.idea/
+
+# ===========================================
+# 🚀 BACKEND (FastAPI / Python)
+# ===========================================
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py,cover
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment files
+*.env
+.env.*
+!.env.example
+
+# Pytest / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.tox/
+.cache/
+
+# Compiled / build output
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Database & local files
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# VSCode settings
+.vscode/
+
+# ===========================================
+# ⚡ FRONTEND (Next.js / React)
+# ===========================================
+
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.turbo/
+frontend/.cache/
+frontend/.swc/
+frontend/coverage/
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.test.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Lock files (optional if you use only one package manager)
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+
+# ===========================================
+# 🧰 Misc
+# ===========================================
+*.bak
+*.old
+*.orig
