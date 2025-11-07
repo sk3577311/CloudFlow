@@ -11,7 +11,11 @@ from app.auth import verify_api_key
 
 router = APIRouter(tags=["Workers"])
 
-QUEUE_KEY = "taskflow:job_queue"
+QUEUE_KEY = {
+    "high":"taskflow:queue:high",
+    "medium":"taskflow:queue:medium",
+    "low":"taskflow:queue:low",
+}
 DEAD_LETTER_KEY = "taskflow:dead_letter"
 
 MAX_RETRIES = 3
@@ -94,34 +98,52 @@ async def worker_loop(worker_name="default_worker"):
 
     try:
         while True:
-            job_data = await redis_client.brpop(QUEUE_KEY, timeout=5)
+            job_data = None
+            for priority in ["high", "medium", "low"]:
+                key = QUEUE_KEY[priority]
+                job_data = await redis_client.brpop(key, timeout=5)
+                if job_data:
+                    break
+
             if not job_data:
                 worker.status = "idle"
+                worker.current_job = None
                 db.commit()
                 await asyncio.sleep(1)
                 continue
 
-            _, payload = job_data
-            job = json.loads(payload)
+            try:
+                _, payload = job_data
+                job = json.loads(payload)
+            except Exception as e:
+                print(f"⚠️ Invalid job payload: {e}")
+                continue
+
             worker.status = "active"
-            worker.current_job = job.get("task")
+            worker.current_job = job.get("task","unknown_task")
             db.commit()
 
-            await process_job(job)
+            if job.get['cron']:
+                asyncio.create_task(schedule_cron_job(job))
+            try:
+                await process_job(job)
+            except Exception as e:
+                print(f"❌ Job failed: {e}")
 
             worker.status = "idle"
             worker.current_job = None
             db.commit()
             await asyncio.sleep(0.2)
+
     except asyncio.CancelledError:
         print(f"🛑 {worker_name} stopped manually.")
+        
     except Exception as e:
         print(f"⚠️ Worker {worker_name} error: {e}")
     finally:
         worker.status = "offline"
         db.commit()
         db.close()
-
 
 async def worker_heartbeat(worker_name: str):
     """Periodically update worker heartbeat."""
@@ -139,7 +161,6 @@ async def worker_heartbeat(worker_name: str):
     finally:
         db.close()
 
-
 async def process_job(job_data: dict):
     """Process a job (with retries and optional webhook callback)."""
     db = SessionLocal()
@@ -152,7 +173,7 @@ async def process_job(job_data: dict):
     db.commit()
 
     try:
-        print(f"⚙️ Running job {job.id}: {job.task}")
+        append_log(db,job,f"Started task: {job.task}")
         await asyncio.sleep(2)
 
         # Simulate failure
@@ -160,7 +181,9 @@ async def process_job(job_data: dict):
             raise ValueError("Simulated task failure")
 
         job.status = JobStatus.completed
-        print(f"✅ Job {job.id} completed successfully")
+        job.result = f"✅ Task '{job.task}' completed successfully"
+        append_log(db,job,job.result)
+        print(job.result)
 
         # Optional webhook callback
         if "callback_url" in job_data and job_data["callback_url"]:
@@ -178,14 +201,36 @@ async def process_job(job_data: dict):
 
     except Exception as e:
         job.retries += 1
-        print(f"❌ Job {job.id} failed ({job.retries}/{MAX_RETRIES}): {e}")
+        job.status = JobStatus.failed
+        job.result = f"❌ Error: {str(e)}"
+        append_log(db,job,job.result)
+        print(job.result)
+
         if job.retries < MAX_RETRIES:
             delay = BACKOFF_BASE ** job.retries
+            append_log(db,job,f"Retrying in {delay}")
             await asyncio.sleep(delay)
             await redis_client.lpush(QUEUE_KEY, json.dumps(job_data))
         else:
-            job.status = JobStatus.failed
+            append_log(db,job,"Moved to Dead Letter Queue")
             await redis_client.lpush(DEAD_LETTER_KEY, json.dumps(job_data))
     finally:
         db.commit()
         db.close()
+
+async def schedule_cron_job(job_data: dict):
+    """Requeue cron job periodically every N seconds."""
+    try:
+        interval = int(job_data["cron"])
+        while True:
+            await asyncio.sleep(interval)
+            print(f"🔁 Re-running cron job {job_data['task']} every {interval}s")
+            await redis_client.lpush(f"taskflow:queue:{job_data.get('priority', 'medium')}", json.dumps(job_data))
+    except Exception as e:
+        print(f"⚠️ Invalid cron value for job {job_data.get('task')}: {e}")
+
+def append_log(db: Session, job: Job, message: str):
+    """Append a log line with timestamp."""
+    timestamp = datetime.utcnow().strftime("%H:%M:%S")
+    job.logs += f"[{timestamp}] {message}\n"
+    db.commit()

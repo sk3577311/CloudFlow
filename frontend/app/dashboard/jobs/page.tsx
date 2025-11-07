@@ -87,6 +87,7 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
   const [cron, setCron] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [priority, setPriority] = useState("medium");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,7 +100,7 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
       return;
     }
 
-    const body: Record<string, any> = { task, payload: parsedPayload };
+    const body: Record<string, any> = { task, payload: parsedPayload, priority };
     if (delay) body.delay = parseInt(delay);
     if (cron) body.cron = cron;
     if (callbackUrl) body.callback_url = callbackUrl;
@@ -164,7 +165,19 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
               <option value="custom_task">Custom Task</option>
             </select>
           </div>
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              required
+              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+            >
+              <option value="high">High 🚀</option>
+              <option value="medium">Medium ⚙️</option>
+              <option value="low">Low 💤</option>
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Payload (JSON)</label>
             <textarea
@@ -192,7 +205,7 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
                 type="text"
                 value={cron}
                 onChange={(e) => setCron(e.target.value)}
-                placeholder="e.g. 60"
+                placeholder="e.g. 60 or Leave blank if one-time job"
                 className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
@@ -224,6 +237,52 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
 }
 
 // ------------------------------------------------------
+// JOB LOGS MODAL
+// ------------------------------------------------------
+function JobLogsModal({ jobId, onClose }: { jobId: number; onClose: () => void }) {
+  const [logs, setLogs] = useState("");
+  const [result, setResult] = useState("");
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/logs`, {
+      headers: { "x-api-key": "supersecret123" },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setLogs(data.logs);
+        setResult(data.result);
+      });
+  }, [jobId]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <motion.div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative"
+      >
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+
+        <h2 className="text-xl font-semibold mb-4">Job Logs</h2>
+        <pre className="bg-gray-50 p-4 rounded-lg text-sm text-gray-800 overflow-y-auto max-h-96 whitespace-pre-wrap">
+          {logs || "No logs yet..."}
+        </pre>
+
+        {result && (
+          <div className="mt-4 p-3 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
+            {result}
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------
 // MAIN JOBS PAGE
 // ------------------------------------------------------
 export default function JobsPage() {
@@ -236,6 +295,13 @@ export default function JobsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [chartData, setChartData] = useState<any[]>([]);
 
+  const [showLogsModal, setShowLogsModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+
+  function openLogs(id: number) {
+    setSelectedJobId(id);
+    setShowLogsModal(true);
+  }
   async function fetchJobs() {
     try {
       setLoading(true);
@@ -313,6 +379,22 @@ export default function JobsPage() {
       </span>
     );
   };
+
+  const priorityBadge = (priority: string) => {
+    const colors: Record<string, string> = {
+      high: "bg-red-100 text-red-700",
+      medium: "bg-blue-100 text-blue-700",
+      low: "bg-gray-100 text-gray-700",
+    };
+    return (
+      <span
+        className={`px-3 py-1 text-xs font-semibold rounded-full ${colors[priority] || colors.medium
+          }`}
+      >
+        {priority.toUpperCase()}
+      </span>
+    )
+  }
 
   return (
     <div className="p-6">
@@ -418,8 +500,10 @@ export default function JobsPage() {
                 <tr>
                   <th className="px-6 py-3 font-medium">ID</th>
                   <th className="px-6 py-3 font-medium">Task</th>
+                  <th className="px-6 py-3 font-medium">Priority</th>
                   <th className="px-6 py-3 font-medium">Status</th>
                   <th className="px-6 py-3 font-medium">Created</th>
+                  <th className="px-6 py-3 font-medium">Logs</th>
                 </tr>
               </thead>
               <tbody>
@@ -432,9 +516,13 @@ export default function JobsPage() {
                   >
                     <td className="px-6 py-3 text-indigo-600 font-medium">{String(j.id).slice(0, 8)}</td>
                     <td className="px-6 py-3">{j.task}</td>
+                    <td className="px-6 py-3">{priorityBadge(j.priority || "medium")}</td>
                     <td className="px-6 py-3">{statusBadge(j.status)}</td>
                     <td className="px-6 py-3 text-gray-500">
                       {j.created_at ? new Date(j.created_at).toLocaleTimeString() : "--"}
+                    </td>
+                    <td className="px-6 py-3 text-indigo-600 cursor-pointer" onClick={(e) => { e.stopPropagation(); openLogs(Number(j.id)) }}>
+                      View Logs
                     </td>
                   </motion.tr>
                 ))}
@@ -483,12 +571,16 @@ export default function JobsPage() {
             </tbody>
           </table>
         </div>
-      )}
+      )
+      }
 
       <AnimatePresence>
         {selectedJob && <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
         {showCreateModal && <CreateJobModal onClose={() => setShowCreateModal(false)} onCreated={fetchJobs} />}
+        {showLogsModal && selectedJobId && (
+          <JobLogsModal jobId={selectedJobId} onClose={() => setShowLogsModal(false)} />
+        )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }

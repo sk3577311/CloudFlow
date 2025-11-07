@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional,Dict
 from enum import Enum
+from app.models import JobPriority
 
 
 # -----------------------------
@@ -51,6 +52,7 @@ class JobCreate(BaseModel):
     payload: Optional[Dict] = None
     delay: Optional[int] = None   # seconds
     cron: Optional[str] = None    # simple interval (e.g. "60" for 60s)
+    priority: JobPriority = JobPriority.medium
     callback_url: Optional[str] = None
 
 class JobResponse(BaseModel):
@@ -58,10 +60,12 @@ class JobResponse(BaseModel):
     task: str
     status: str
     retries: Optional[int] = 0
+    priority: JobPriority
     created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+        use_enum_values = True
 
 
 # -----------------------------

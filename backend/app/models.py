@@ -3,7 +3,13 @@ from sqlalchemy.orm import relationship
 from .database import Base
 import enum
 
-
+# -----------------------------
+# JOB PRIORITY
+# -----------------------------
+class JobPriority(enum.Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
 # -----------------------------
 # ENUMS
 # -----------------------------
@@ -38,10 +44,14 @@ class Job(Base):
     id = Column(Integer, primary_key=True, index=True)
     task = Column(String, nullable=False)
     status = Column(Enum(JobStatus), default=JobStatus.queued)
+    priority = Column(Enum(JobPriority),default=JobPriority.medium)
     retries = Column(Integer, default=0, nullable=False)  # 👈 ADD THIS LINE
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    logs = Column(String, default="", nullable=False)
+    result = Column(String, nullable=True)
+    
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     user = relationship("User", back_populates="jobs")
 
