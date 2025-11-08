@@ -53,19 +53,6 @@ export default function TasksPage() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [isDark, setIsDark] = useState(false);
 
-  // 🌙 lightweight system theme listener
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      setIsDark(e.matches);
-      document.documentElement.classList.toggle("dark", e.matches);
-    };
-    setIsDark(mq.matches);
-    document.documentElement.classList.toggle("dark", mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
   async function fetchTasks() {
     try {
       setLoading(true);

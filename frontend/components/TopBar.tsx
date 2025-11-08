@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { clearToken } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import AlertsBell from "./AlertsBell";
 
 interface TopBarProps {
   title: string;
@@ -84,10 +85,7 @@ export default function TopBar({ title, onRefresh, loading, lastUpdate }: TopBar
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition">
-          <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
+        <AlertsBell />
 
         {/* User */}
         <div

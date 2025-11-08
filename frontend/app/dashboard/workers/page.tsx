@@ -59,19 +59,6 @@ export default function WorkersPage() {
   const [selectedScale, setSelectedScale] = useState<number>(1);
   const [isDark, setIsDark] = useState(false);
 
-  // 🌙 System-theme detection (lightweight)
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      setIsDark(e.matches);
-      document.documentElement.classList.toggle("dark", e.matches);
-    };
-    setIsDark(mq.matches);
-    document.documentElement.classList.toggle("dark", mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
   async function fetchWorkers() {
     try {
       setLoading(true);
