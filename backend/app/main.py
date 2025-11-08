@@ -10,6 +10,8 @@ from app.routes import jobs, tasks, workers,system
 from app.database import SessionLocal
 from app.models import Job, JobStatus
 from app.redis_client import redis_client
+from app.routes import alerts
+
 
 app = FastAPI(title="TaskFlow Cloud API", version="1.0")
 
@@ -32,6 +34,7 @@ app.include_router(jobs.router, prefix="/jobs", tags=["Jobs"])
 app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 app.include_router(workers.router, prefix="/workers", tags=["Workers"])
 app.include_router(system.router, prefix="/system")
+app.include_router(alerts.router)
 
 # -----------------------------
 # Redis Queue
