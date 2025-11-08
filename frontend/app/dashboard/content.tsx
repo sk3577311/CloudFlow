@@ -134,7 +134,6 @@ export default function DashboardContent() {
   }
 
   useEffect(() => {
-    if (!accessToken) return;
     fetchSystemMetrics();
     const interval = setInterval(fetchSystemMetrics, 5000);
     return () => clearInterval(interval);
@@ -232,11 +231,10 @@ export default function DashboardContent() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-full border transition ${
-              filter === f
+            className={`px-3 py-1 rounded-full border transition ${filter === f
                 ? "bg-indigo-500 text-white"
                 : "bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700"
-            }`}
+              }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -314,7 +312,12 @@ export default function DashboardContent() {
                   borderRadius: "0.5rem",
                   border: "none",
                 }} />
-                <Line type="monotone" dataKey="value" stroke={m.color} strokeWidth={3} />
+                <Line type="monotone"
+                  dataKey="value"
+                  stroke={m.color}
+                  strokeWidth={3}
+                  isAnimationActive={true}
+                  animationDuration={400} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -378,17 +381,16 @@ export default function DashboardContent() {
                 {selectedJob.history?.map((h, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                     <span
-                      className={`w-3 h-3 rounded-full ${
-                        h.status === "queued"
+                      className={`w-3 h-3 rounded-full ${h.status === "queued"
                           ? "bg-yellow-500"
                           : h.status === "processing"
-                          ? "bg-blue-500"
-                          : h.status === "completed"
-                          ? "bg-green-500"
-                          : h.status === "failed"
-                          ? "bg-red-500"
-                          : "bg-gray-500"
-                      }`}
+                            ? "bg-blue-500"
+                            : h.status === "completed"
+                              ? "bg-green-500"
+                              : h.status === "failed"
+                                ? "bg-red-500"
+                                : "bg-gray-500"
+                        }`}
                     />
                     <span className="font-medium">{h.status}</span>
                     <span className="text-gray-500 dark:text-gray-400 text-sm">
@@ -402,9 +404,8 @@ export default function DashboardContent() {
             {selectedJob.status === "failed" && (
               <button
                 onClick={() => retryFailedJobs(selectedJob.id)}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition ${
-                  retrying ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition ${retrying ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 disabled={retrying}
               >
                 <Repeat className="w-5 h-5" />

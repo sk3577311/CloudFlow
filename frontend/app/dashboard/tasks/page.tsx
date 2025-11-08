@@ -229,7 +229,7 @@ export default function TasksPage() {
                 whileHover={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB" }}
                 className="border-t border-gray-100 dark:border-neutral-800 cursor-pointer"
               >
-                <td className="px-6 py-3 text-indigo-600 font-medium">{t.id.slice(0, 8)}</td>
+                <td className="px-6 py-3 text-indigo-600 font-medium">{String(t.id).slice(0, 8)}</td>
                 <td className="px-6 py-3">{t.name}</td>
                 <td className="px-6 py-3">{t.type}</td>
                 <td className="px-6 py-3">{statusBadge(t.status)}</td>

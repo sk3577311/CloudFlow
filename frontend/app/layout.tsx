@@ -9,13 +9,13 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <ThemeProvider>
-        <body className="bg-gray-50 antialiased">
-          {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-gray-50 antialiased">
+        <ThemeProvider>
+            {children}
           <ToastProvider />
-        </body>
-      </ThemeProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

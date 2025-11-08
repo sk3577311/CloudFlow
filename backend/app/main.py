@@ -31,9 +31,9 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(jobs.router, prefix="/jobs", tags=["Jobs"])
-app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
+app.include_router(tasks.router,prefix="/tasks", tags=["Tasks"])
 app.include_router(workers.router, prefix="/workers", tags=["Workers"])
-app.include_router(system.router, prefix="/system")
+app.include_router(system.router)
 app.include_router(alerts.router)
 
 # -----------------------------
@@ -49,6 +49,24 @@ worker_task = None
 async def on_startup():
     global worker_task
     print("🚀 FastAPI app starting...")
+
+    # 🧹 1️⃣ Clear old cron locks (avoid duplicate schedules after restart)
+    try:
+        keys = await redis_client.keys("cron_lock:*")
+        if keys:
+            await redis_client.delete(*keys)
+            print(f"🧹 Cleared {len(keys)} stale cron lock(s)")
+    except Exception as e:
+        print(f"⚠️ Failed to clear cron locks: {e}")
+
+    # 🧹 2️⃣ Cancel any orphaned async tasks from previous run
+    for name, task in list(workers.active_cron_jobs.items()):
+        if not task.done():
+            task.cancel()
+            print(f"💀 Stopped orphan cron task: {name}")
+        workers.active_cron_jobs.pop(name, None)
+
+    # 🚀 3️⃣ Start background worker if enabled
     if settings.RUN_WORKER:
         print("🧠 RUN_WORKER=True → Starting background worker automatically")
         worker_task = asyncio.create_task(workers.worker_loop("default_worker"))
