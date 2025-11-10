@@ -7,7 +7,7 @@ from app.auth import verify_api_key
 from app.redis_client import redis_client
 from app.config import settings
 
-router = APIRouter(prefix="/alerts", tags=["Alerts"])
+router = APIRouter()
 
 # keys used in your worker/queue
 DEAD_LETTER_KEY = "taskflow:dead_letter"

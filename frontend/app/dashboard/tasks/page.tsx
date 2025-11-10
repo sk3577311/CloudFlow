@@ -56,7 +56,7 @@ export default function TasksPage() {
   async function fetchTasks() {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tasks`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tasks/`, {
         headers: { "x-api-key": "supersecret123" },
       });
       if (!res.ok) throw new Error("Failed to fetch tasks");

@@ -69,7 +69,7 @@ export default function DashboardContent() {
       if (!triggeredByRefresh) setLoading(true);
       startLoading();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/`, {
         headers: {
           "x-api-key": "supersecret123",
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
