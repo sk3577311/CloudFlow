@@ -1,5 +1,4 @@
 'use client'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -7,7 +6,9 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    router.push('/login')
+    if (router) {
+      router.replace('/login') // replace prevents back-button redirect loops
+    }
   }, [router])
 
   return (

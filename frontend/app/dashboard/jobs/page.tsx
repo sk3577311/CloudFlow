@@ -117,7 +117,7 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/`, {
         method: "POST",
         headers: {
           "x-api-key": "supersecret123",
@@ -317,33 +317,6 @@ export default function JobsPage() {
     typeof window !== "undefined" ? window.matchMedia?.("(prefers-color-scheme: dark)").matches : false
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    // set initial class on html
-    if (mq.matches) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
-    // listener
-    if (mq.addEventListener) {
-      mq.addEventListener("change", handler);
-    } else {
-      // Safari fallback
-      // @ts-ignore
-      mq.addListener(handler);
-    }
-    // keep isDark in sync
-    setIsDark(mq.matches);
-    return () => {
-      if (mq.removeEventListener) {
-        mq.removeEventListener("change", handler);
-      } else {
-        // @ts-ignore
-        mq.removeListener(handler);
-      }
-    };
-  }, []);
-
   function openLogs(id: number) {
     setSelectedJobId(id);
     setShowLogsModal(true);
@@ -351,7 +324,7 @@ export default function JobsPage() {
   async function fetchJobs() {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/`, {
         headers: { "x-api-key": "supersecret123" },
       });
       const data: Job[] = await res.json();

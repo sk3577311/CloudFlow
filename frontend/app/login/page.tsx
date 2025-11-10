@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Loader2, Lock, User } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import api from "@/lib/axios";
 import { saveToken } from "@/lib/auth";
-import { Lock, User, Loader2 } from "lucide-react";
 
 export default function TaskFlowLogin() {
   const [username, setUsername] = useState("");
@@ -14,23 +14,10 @@ export default function TaskFlowLogin() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // subtle animated gradient background
-  useEffect(() => {
-    const bg = document.getElementById("animated-bg");
-    if (!bg) return;
-    let deg = 45;
-    const animate = () => {
-      deg = (deg + 0.3) % 360;
-      bg.style.background = `linear-gradient(${deg}deg, rgba(99,102,241,0.2), rgba(147,51,234,0.15), rgba(236,72,153,0.1))`;
-      requestAnimationFrame(animate);
-    };
-    animate();
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      showToast("Please fill in all fields", "error");
+      showToast("Please enter both username and password", "error");
       return;
     }
 
@@ -39,7 +26,7 @@ export default function TaskFlowLogin() {
       const res = await api.post("/auth/login", { username, password });
       saveToken(res.data.access_token);
       showToast(`Welcome back, ${username}!`);
-      router.push("/dashboard");
+      router.replace("/reloading");
     } catch {
       showToast("Invalid credentials", "error");
     } finally {
@@ -48,71 +35,27 @@ export default function TaskFlowLogin() {
   };
 
   return (
-    <div
-      id="animated-bg"
-      className="relative flex flex-col lg:flex-row items-center justify-center min-h-screen bg-white dark:bg-neutral-950 overflow-hidden transition-colors"
-    >
-      {/* Floating Accent Dots */}
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1.5 h-1.5 rounded-full bg-indigo-400/40 dark:bg-indigo-300/20"
-          initial={{ x: Math.random() * 1400, y: Math.random() * 900 }}
-          animate={{
-            y: [0, 10, -10, 0],
-            opacity: [0.4, 0.8, 0.5, 0.4],
-          }}
-          transition={{
-            duration: 8 + Math.random() * 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-
-      {/* Left Content Section */}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 transition-colors">
       <motion.div
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left px-8 lg:px-20 z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-sm bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200/40 dark:border-neutral-800/60 p-8"
       >
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-4xl lg:text-6xl font-semibold text-gray-800 dark:text-gray-100 mb-3 tracking-tight"
-        >
-          Welcome to{" "}
-          <span className="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-            TaskFlow
-          </span>
-        </motion.h1>
-        <p className="text-gray-600 dark:text-gray-400 text-base lg:text-lg max-w-md">
-          A cloud-native automation platform to manage, monitor, and scale your
-          background jobs effortlessly.
-        </p>
-      </motion.div>
-
-      {/* Right Login Card */}
-      <motion.div
-        initial={{ opacity: 0, x: 40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="relative w-full max-w-md lg:w-1/3 mt-10 lg:mt-0 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl border border-gray-200/40 dark:border-neutral-700/40 rounded-2xl shadow-lg dark:shadow-[0_0_20px_rgba(0,0,0,0.5)] p-8 mx-6"
-      >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md mb-3">
-            <span className="text-white text-lg font-bold">TF</span>
+        {/* Logo / Title */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md mb-3">
+            <span className="text-white font-semibold text-lg">TF</span>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 tracking-tight">
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
             Sign in to TaskFlow
-          </h2>
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Secure dashboard access
+            Manage and monitor your jobs seamlessly
           </p>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="relative">
             <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -121,7 +64,7 @@ export default function TaskFlowLogin() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white/60 dark:bg-neutral-800/60 focus:bg-white dark:focus:bg-neutral-900 focus:ring-2 focus:ring-indigo-400 outline-none transition-all text-gray-900 dark:text-gray-100 backdrop-blur-sm"
+              className="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 bg-transparent focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none transition"
             />
           </div>
 
@@ -132,7 +75,7 @@ export default function TaskFlowLogin() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white/60 dark:bg-neutral-800/60 focus:bg-white dark:focus:bg-neutral-900 focus:ring-2 focus:ring-indigo-400 outline-none transition-all text-gray-900 dark:text-gray-100 backdrop-blur-sm"
+              className="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-200 dark:border-neutral-700 bg-transparent focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none transition"
             />
           </div>
 
@@ -153,23 +96,28 @@ export default function TaskFlowLogin() {
           </motion.button>
         </form>
 
-        <div className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">
-          Forgot your password?{" "}
-          <span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
-            Reset
-          </span>
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Forgot password?{" "}
+            <span className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+              Reset
+            </span>
+          </p>
         </div>
       </motion.div>
 
-      {/* Footer */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.8 }}
-        transition={{ delay: 0.6 }}
-        className="absolute bottom-6 text-gray-400 dark:text-gray-500 text-xs tracking-wide"
-      >
-        © {new Date().getFullYear()} TaskFlow Cloud — Secure Access Portal
-      </motion.p>
+      {/* Subtle floating background blobs */}
+      <motion.div
+        className="absolute w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -z-10"
+        animate={{ x: [0, 50, -50, 0], y: [0, 20, -20, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl -z-10"
+        animate={{ x: [0, -60, 60, 0], y: [0, -30, 30, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
     </div>
   );
 }

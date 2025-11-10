@@ -53,23 +53,10 @@ export default function TasksPage() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [isDark, setIsDark] = useState(false);
 
-  // 🌙 lightweight system theme listener
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      setIsDark(e.matches);
-      document.documentElement.classList.toggle("dark", e.matches);
-    };
-    setIsDark(mq.matches);
-    document.documentElement.classList.toggle("dark", mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
   async function fetchTasks() {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tasks`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tasks/`, {
         headers: { "x-api-key": "supersecret123" },
       });
       if (!res.ok) throw new Error("Failed to fetch tasks");
@@ -242,7 +229,7 @@ export default function TasksPage() {
                 whileHover={{ backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB" }}
                 className="border-t border-gray-100 dark:border-neutral-800 cursor-pointer"
               >
-                <td className="px-6 py-3 text-indigo-600 font-medium">{t.id.slice(0, 8)}</td>
+                <td className="px-6 py-3 text-indigo-600 font-medium">{String(t.id).slice(0, 8)}</td>
                 <td className="px-6 py-3">{t.name}</td>
                 <td className="px-6 py-3">{t.type}</td>
                 <td className="px-6 py-3">{statusBadge(t.status)}</td>

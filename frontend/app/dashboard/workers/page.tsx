@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity,
   Clock,
@@ -58,24 +58,12 @@ export default function WorkersPage() {
   const [scaling, setScaling] = useState(false);
   const [selectedScale, setSelectedScale] = useState<number>(1);
   const [isDark, setIsDark] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>("");
 
-  // 🌙 System-theme detection (lightweight)
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      setIsDark(e.matches);
-      document.documentElement.classList.toggle("dark", e.matches);
-    };
-    setIsDark(mq.matches);
-    document.documentElement.classList.toggle("dark", mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  async function fetchWorkers() {
+  async function fetchWorkers(showToastMsg = true) {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workers`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workers/`, {
         headers: { "x-api-key": "supersecret123" },
       });
       if (!res.ok) throw new Error("Failed to fetch workers");
@@ -115,6 +103,8 @@ export default function WorkersPage() {
       );
 
       setChartData(Object.values(grouped));
+      setLastUpdate(new Date().toLocaleTimeString());
+      if (showToastMsg) toast.success("✅ Workers refreshed");
     } catch {
       toast.error("❌ Failed to load workers");
     } finally {
@@ -125,13 +115,13 @@ export default function WorkersPage() {
   async function restartWorker() {
     try {
       toast.loading("Restarting worker...");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workers/restart`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workers/restart/`, {
         method: "POST",
         headers: { "x-api-key": "supersecret123" },
       });
       if (!res.ok) throw new Error("Restart failed");
       toast.success("✅ Worker restarted successfully");
-      fetchWorkers();
+      fetchWorkers(false);
     } catch {
       toast.error("❌ Failed to restart worker");
     } finally {
@@ -151,7 +141,7 @@ export default function WorkersPage() {
       );
       if (!res.ok) throw new Error("Scaling failed");
       toast.success(`✅ Scaled to ${count} worker${count > 1 ? "s" : ""}`);
-      fetchWorkers();
+      fetchWorkers(false);
     } catch {
       toast.error("❌ Failed to scale workers");
     } finally {
@@ -159,10 +149,9 @@ export default function WorkersPage() {
     }
   }
 
+  // 🟢 Fetch only once on mount (manual refresh later)
   useEffect(() => {
-    fetchWorkers();
-    const interval = setInterval(fetchWorkers, 10000);
-    return () => clearInterval(interval);
+    fetchWorkers(false);
   }, []);
 
   const cards = [
@@ -196,11 +185,28 @@ export default function WorkersPage() {
     <div className="p-6 bg-neutral-50 dark:bg-[#1c1c1f] min-h-screen transition-colors">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-          ⚙️ Worker Dashboard
-        </h1>
+        <div>
+          <h1 className="text-3xl font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+            ⚙️ Worker Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Last updated: {lastUpdate || "—"}
+          </p>
+        </div>
 
         <div className="flex gap-3 items-center">
+          {/* Manual Refresh Button */}
+          <button
+            onClick={() => fetchWorkers()}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-indigo-400 hover:text-indigo-500 text-gray-700 dark:text-gray-200 transition shadow-sm"
+          >
+            <RefreshCw
+              className={`w-5 h-5 ${loading ? "animate-spin text-indigo-500" : "text-gray-500"}`}
+            />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
           {/* Restart Worker */}
           <button
             onClick={restartWorker}
@@ -268,13 +274,7 @@ export default function WorkersPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#2b3036" : "#e5e7eb"} />
               <XAxis dataKey="time" stroke={isDark ? "#9ca3af" : "#4b5563"} />
               <YAxis stroke={isDark ? "#9ca3af" : "#4b5563"} />
-              <Tooltip
-                wrapperStyle={{
-                  background: isDark ? "#0b0b0b" : "#fff",
-                  border: `1px solid ${isDark ? "#2b3036" : "#e5e7eb"}`,
-                  color: isDark ? "#f3f4f6" : "#111827",
-                }}
-              />
+              <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="active" stroke="#10B981" strokeWidth={3} />
               <Line type="monotone" dataKey="offline" stroke="#EF4444" strokeWidth={3} />
@@ -301,13 +301,6 @@ export default function WorkersPage() {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                wrapperStyle={{
-                  background: isDark ? "#0b0b0b" : "#fff",
-                  border: `1px solid ${isDark ? "#2b3036" : "#e5e7eb"}`,
-                  color: isDark ? "#f3f4f6" : "#111827",
-                }}
-              />
             </PieChart>
           </ResponsiveContainer>
         </div>

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 import psutil
 from app.auth import verify_api_key
 
-router = APIRouter(prefix="/system", tags=["System"])
+router = APIRouter()
 
 @router.get("/metrics")
 def get_system_metrics(api_key: bool = Depends(verify_api_key)):

@@ -43,7 +43,8 @@ async def create_job(
     if getattr(job, "callback_url", None):
         job_data["callback_url"] = job.callback_url
 
-    await redis_client.lpush("taskflow:job_queue", json.dumps(job_data))
+    priority_queue = f"taskflow:queue:{priority.value}"
+    await redis_client.lpush(priority_queue, json.dumps(job_data))
     print(f"🚀 Queued job {new_job.id} [{priority.value.upper()}]")
 
     return new_job
