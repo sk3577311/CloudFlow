@@ -7,66 +7,67 @@ import TopBar from "@/components/TopBar";
 import { isAuthenticated } from "@/lib/auth";
 import { RefreshProvider, useRefresh } from "@/lib/refreshContext";
 import { SidebarProvider, useSidebar } from "@/lib/sidebarContext";
+import { ToastProvider } from "@/components/Toast";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <RefreshProvider>
         <DashboardShell>{children}</DashboardShell>
+        <ToastProvider />
       </RefreshProvider>
     </SidebarProvider>
   );
 }
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [lastUpdate, setLastUpdate] = useState("");
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const router = useRouter();
-  const { trigger, isRefreshing } = useRefresh();
-  const { collapsed } = useSidebar();
   const pathname = usePathname();
-  const pageTitle = pathname.split("/").filter(Boolean).pop() || "Dashboard";
+
+  const { collapsed } = useSidebar();
+  const { trigger, isRefreshing } = useRefresh();
+
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState("");
+
+  const isReloaderRoute = pathname.startsWith("/reloading");
 
   useEffect(() => {
-    const tokenExists = isAuthenticated();
+    // skip checks for reloader
+    if (isReloaderRoute) {
+      setIsAuthChecked(true);
+      return;
+    }
 
-    if (!tokenExists) {
+    // normal dashboard auth
+    if (!isAuthenticated()) {
       router.replace("/login");
       return;
     }
 
     setIsAuthChecked(true);
     setLastUpdate(new Date().toLocaleTimeString());
-  }, []);
-
-
-  const handleRefresh = () => {
-    trigger();
-    setLastUpdate(new Date().toLocaleTimeString());
-  };
+  }, [pathname]);
 
   if (!isAuthChecked) return null;
 
+  if (isReloaderRoute) return <>{children}</>;
+
+  const pageTitle = pathname.split("/").filter(Boolean).pop() || "Dashboard";
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-neutral-900 transition-colors duration-300">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-gray-50 dark:bg-neutral-900">
       <Sidebar />
 
-      {/* Main Content (auto expand/collapse) */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${collapsed ? "ml-20" : "ml-64"
-          }`}
-      >
+      <div className={`flex-1 flex flex-col transition-all ${collapsed ? "ml-20" : "ml-64"}`}>
         <TopBar
           title={pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1)}
-          onRefresh={handleRefresh}
-          lastUpdate={lastUpdate}
+          onRefresh={trigger}
           loading={isRefreshing}
+          lastUpdate={lastUpdate}
         />
-        <main className="flex-1 p-8 overflow-y-auto transition-all duration-300">
-          {children}
-        </main>
+
+        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

@@ -95,8 +95,6 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks();
-    const interval = setInterval(fetchTasks, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const cards = [

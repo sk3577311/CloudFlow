@@ -1,6 +1,8 @@
+// app/layout.tsx  (SERVER COMPONENT)
 import "./globals.css";
-import { ToastProvider } from "@/components/Toast";
-import { ThemeProvider } from "next-themes";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"], weight: ["300","400","500","600"] });
 
 export const metadata = {
   title: "TaskFlow Cloud",
@@ -9,12 +11,9 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="bg-gray-50 antialiased">
-        <ThemeProvider>
-            {children}
-          <ToastProvider />
-        </ThemeProvider>
+    <html lang="en" className={`${inter.className} dark`}>
+      <body className="min-h-screen bg-[var(--tf-bg)] text-white antialiased">
+        {children}
       </body>
     </html>
   );

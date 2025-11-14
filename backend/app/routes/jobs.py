@@ -10,7 +10,7 @@ from app.schemas import JobCreate, JobResponse
 from app.redis_client import redis_client
 from app.auth import verify_api_key
 
-router = APIRouter(prefix="/jobs", tags=["Jobs"])
+router = APIRouter()
 QUEUE_KEY = "taskflow:job_queue"
 DEAD_LETTER_KEY = "taskflow:dead_letter"
 
