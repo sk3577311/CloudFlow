@@ -1,74 +1,92 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
-import { isAuthenticated } from "@/lib/auth";
-import { RefreshProvider, useRefresh } from "@/lib/refreshContext";
-import { SidebarProvider, useSidebar } from "@/lib/sidebarContext";
+import NovaLayout from "@/components/layout/NovaLayout";
+import { RefreshProvider } from "@/lib/refreshContext";
 import { ToastProvider } from "@/components/Toast";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <RefreshProvider>
-        <DashboardShell>{children}</DashboardShell>
-        <ToastProvider />
-      </RefreshProvider>
-    </SidebarProvider>
+    <RefreshProvider>
+      <NovaLayout>
+        {children}
+      </NovaLayout>
+      <ToastProvider />
+    </RefreshProvider>
   );
 }
 
-function DashboardShell({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
 
-  const { collapsed } = useSidebar();
-  const { trigger, isRefreshing } = useRefresh();
+// "use client";
 
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState("");
+// import { useEffect, useState } from "react";
+// import { useRouter, usePathname } from "next/navigation";
+// import Sidebar from "@/components/Sidebar";
+// import TopBar from "@/components/TopBar";
+// import { isAuthenticated } from "@/lib/auth";
+// import { RefreshProvider, useRefresh } from "@/lib/refreshContext";
+// import { SidebarProvider, useSidebar } from "@/lib/sidebarContext";
+// import { ToastProvider } from "@/components/Toast";
 
-  const isReloaderRoute = pathname.startsWith("/reloading");
+// export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <SidebarProvider>
+//       <RefreshProvider>
+//         <DashboardShell>{children}</DashboardShell>
+//         <ToastProvider />
+//       </RefreshProvider>
+//     </SidebarProvider>
+//   );
+// }
 
-  useEffect(() => {
-    // skip checks for reloader
-    if (isReloaderRoute) {
-      setIsAuthChecked(true);
-      return;
-    }
+// function DashboardShell({ children }: { children: React.ReactNode }) {
+//   const router = useRouter();
+//   const pathname = usePathname();
 
-    // normal dashboard auth
-    if (!isAuthenticated()) {
-      router.replace("/login");
-      return;
-    }
+//   const { collapsed } = useSidebar();
+//   const { trigger, isRefreshing } = useRefresh();
 
-    setIsAuthChecked(true);
-    setLastUpdate(new Date().toLocaleTimeString());
-  }, [pathname]);
+//   const [isAuthChecked, setIsAuthChecked] = useState(false);
+//   const [lastUpdate, setLastUpdate] = useState("");
 
-  if (!isAuthChecked) return null;
+//   const isReloaderRoute = pathname.startsWith("/reloading");
 
-  if (isReloaderRoute) return <>{children}</>;
+//   useEffect(() => {
+//     // skip checks for reloader
+//     if (isReloaderRoute) {
+//       setIsAuthChecked(true);
+//       return;
+//     }
 
-  const pageTitle = pathname.split("/").filter(Boolean).pop() || "Dashboard";
+//     // normal dashboard auth
+//     if (!isAuthenticated()) {
+//       router.replace("/login");
+//       return;
+//     }
 
-  return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-neutral-900">
-      <Sidebar />
+//     setIsAuthChecked(true);
+//     setLastUpdate(new Date().toLocaleTimeString());
+//   }, [pathname]);
 
-      <div className={`flex-1 flex flex-col transition-all ${collapsed ? "ml-20" : "ml-64"}`}>
-        <TopBar
-          title={pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1)}
-          onRefresh={trigger}
-          loading={isRefreshing}
-          lastUpdate={lastUpdate}
-        />
+//   if (!isAuthChecked) return null;
 
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-      </div>
-    </div>
-  );
-}
+//   if (isReloaderRoute) return <>{children}</>;
+
+//   const pageTitle = pathname.split("/").filter(Boolean).pop() || "Dashboard";
+
+//   return (
+//     <div className="flex min-h-screen bg-gray-50 dark:bg-neutral-900">
+//       <Sidebar />
+
+//       <div className={`flex-1 flex flex-col transition-all ${collapsed ? "ml-20" : "ml-64"}`}>
+//         <TopBar
+//           title={pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1)}
+//           onRefresh={trigger}
+//           loading={isRefreshing}
+//           lastUpdate={lastUpdate}
+//         />
+
+//         <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+//       </div>
+//     </div>
+//   );
+// }

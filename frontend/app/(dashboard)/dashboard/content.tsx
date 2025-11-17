@@ -114,33 +114,36 @@ export default function DashboardContent() {
   const memoryTrend = memoryData.at(-1)?.trend ?? "steady";
 
   return (
-    <div className="transition-colors duration-300">
-      <MetricsGrid
-        jobs={jobs}
-        cpuData={cpuData}
-        memoryData={memoryData}
-        loading={loading}
-        cpuTrend={cpuTrend}
-        memoryTrend={memoryTrend}
-      />
+  <div className="transition-colors duration-300 md:px-0 max-w-7xl mx-auto">
+    <MetricsGrid
+      jobs={jobs}
+      cpuData={cpuData}
+      memoryData={memoryData}
+      loading={loading}
+      cpuTrend={cpuTrend}
+      memoryTrend={memoryTrend}
+    />
 
-      <FiltersBar filter={filter} setFilter={setFilter} />
+    <FiltersBar filter={filter} setFilter={setFilter} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-10">
-        <LineChartSection jobs={jobs} />
-        <PieChartSection jobs={jobs} />
-      </div>
-
-      <SystemMetricsSection cpuData={cpuData} memoryData={memoryData} />
-      <InsightsPanel />
-      <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-100 mb-6 mt-6">
-        💻 Jobs Tables
-      </h2>
-      <JobsTable jobs={jobs} filter={filter} onSelectJob={setSelectedJob} />
-
-      {selectedJob && (
-        <JobModal job={selectedJob} onClose={() => setSelectedJob(null)} retrying={retrying} />
-      )}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-10">
+      <LineChartSection jobs={jobs} />
+      <PieChartSection jobs={jobs} />
     </div>
-  );
+
+    <SystemMetricsSection cpuData={cpuData} memoryData={memoryData} />
+    <InsightsPanel />
+
+    <h2 className="text-xl font-semibold text-white mb-6 mt-6">
+      💻 Jobs Tables
+    </h2>
+
+    <JobsTable jobs={jobs} filter={filter} onSelectJob={setSelectedJob} />
+
+    {selectedJob && (
+      <JobModal job={selectedJob} onClose={() => setSelectedJob(null)} retrying={retrying} />
+    )}
+  </div>
+);
+
 }

@@ -19,7 +19,7 @@ interface MetricCardProps {
 export default function MetricCard({
   label,
   value,
-  color = "#A7EFFF",
+  color = "#ffffffff",
   sparkData = [],
   icon,
   highlight = false,
