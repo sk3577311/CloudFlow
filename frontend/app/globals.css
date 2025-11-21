@@ -3,17 +3,27 @@
 
 /* THEME A — Mint / Cyan Neumorphic */
 :root {
+  --tf-ribbon-width: 72px;
+  /* collapsed */
+  --tf-ribbon-width-expanded: 220px;
+  --tf-ribbon-offset: 72px;
+  /* default layout left padding */
+
+  /* Vercel minimal palette */
+  --tf-bg: #000;
+  --tf-surface: #111;
+  --tf-border: #1c1c1c;
+  --tf-text: #fff;
+  --tf-text-muted: #999;
+  --tf-accent: #fff;
   --tf-bg: #0b0d10;
   --tf-card: #1b1c1c;
   --tf-card-dark: #101214;
   --tf-border: #1f2226;
 
   /* Text */
-  --tf-text: #ffffff;
   --tf-text-dim: #9ba3af;
 
-  /* Accent (your chosen color) */
-  --tf-accent: #c8edf2;
 
   /* Radiuses */
   --tf-radius-md: 12px;
@@ -21,7 +31,8 @@
 }
 
 /* Force dark background for html/body */
-html, body {
+html,
+body {
   background: var(--tf-bg) !important;
   color: var(--tf-text) !important;
   font-family: 'Inter', sans-serif;
@@ -50,8 +61,8 @@ html, body {
   padding: 20px;
   border: 1px solid var(--tf-border);
   box-shadow:
-    8px 8px 20px rgba(0,0,0,0.55),
-    -8px -8px 20px rgba(255,255,255,0.03);
+    8px 8px 20px rgba(0, 0, 0, 0.55),
+    -8px -8px 20px rgba(255, 255, 255, 0.03);
   transition: box-shadow .18s ease, transform .12s ease;
 }
 
@@ -61,7 +72,7 @@ html, body {
   color: #000;
   border-radius: 22px;
   padding: 18px;
-  box-shadow: 0 6px 18px rgba(200,237,242,0.16), 0 1px 0 rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(200, 237, 242, 0.16), 0 1px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* small utility */
@@ -74,16 +85,28 @@ html, body {
 }
 
 /* Ensure no white backgrounds slip in */
-.bg-white, .bg-neutral-50, .bg-gray-50, .bg-neutral-100 { background: transparent !important; }
+.bg-white,
+.bg-neutral-50,
+.bg-gray-50,
+.bg-neutral-100 {
+  background: transparent !important;
+}
 
 /* default text */
-.text-muted { color: var(--tf-text-dim); }
+.text-muted {
+  color: var(--tf-text-dim);
+}
 
 /* helper for small accent text */
-.text-accent { color: var(--tf-accent); }
+.text-accent {
+  color: var(--tf-accent);
+}
 
 /* Basic form and card elements */
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   color: var(--tf-text);
 }
 
@@ -96,4 +119,6 @@ button, input, textarea, select {
 }
 
 /* Sizing safety */
-.min-h-screen { min-height: 100vh; }
+.min-h-screen {
+  min-height: 100vh;
+}

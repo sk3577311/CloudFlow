@@ -11,8 +11,8 @@ import secrets
 # Add project root to Python path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from app.database import Base, engine, SessionLocal
-from app.models import User, Job, Task, Worker
+from ..database import Base, engine, SessionLocal
+from ..models import User, Job, Task, Worker
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -27,7 +27,7 @@ def reset_database():
 
     try:
         admin_username = "admin"
-        admin_password = "password123"[:72]  # bcrypt max length
+        admin_password = "Password@123"[:72]  # bcrypt max length
 
         hashed_pw = pwd_context.hash(admin_password)
 
