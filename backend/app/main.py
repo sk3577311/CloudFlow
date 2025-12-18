@@ -6,51 +6,71 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.auth import router as auth_router
 from app.routes import router as api_router
-from app.routes import jobs, tasks, workers,system
+from app.routes import jobs, tasks, workers, system, realtime, alerts,intelligence_routes
 from app.database import SessionLocal
-from app.models import Job, JobStatus
 from app.redis_client import redis_client
-from app.routes import alerts
+from app.routes.realtime import metrics_broadcaster
+from app import intelligence
+from app.routes.realtime import metrics_ws
 
 
 app = FastAPI(title="TaskFlow Cloud API", version="1.0")
 app.router.redirect_slashes = False
-# -----------------------------
-# CORS
-# -----------------------------
+
+
+# -------------------------------------------------
+# ✅ Proper CORS setup for WebSocket and REST
+# -------------------------------------------------
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -----------------------------
+
+# -------------------------------------------------
 # Routers
-# -----------------------------
+# -------------------------------------------------
 app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(jobs.router, prefix="/jobs", tags=["Jobs"])
-app.include_router(tasks.router,prefix="/tasks", tags=["Tasks"])
+app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 app.include_router(workers.router, prefix="/workers", tags=["Workers"])
-app.include_router(system.router,prefix="/system", tags=["System"])
-app.include_router(alerts.router,prefix="/alerts", tags=["Alerts"])
+app.include_router(system.router, prefix="/system", tags=["System"])
+app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
+app.include_router(realtime.router, tags=["Realtime"])
+app.include_router(intelligence_routes.router)
 
-# -----------------------------
+# -------------------------------------------------
+# Explicitly mount WebSocket route (fixes WS error)
+# -------------------------------------------------
+from app.routes.realtime import metrics_ws
+app.add_api_websocket_route("/ws/metrics", metrics_ws)
+
+
+# -------------------------------------------------
 # Redis Queue
-# -----------------------------
+# -------------------------------------------------
 QUEUE_KEY = "taskflow:job_queue"
 worker_task = None
 
-# -----------------------------
+
+# -------------------------------------------------
 # FastAPI Startup / Shutdown
-# -----------------------------
+# -------------------------------------------------
 @app.on_event("startup")
 async def on_startup():
     global worker_task
     print("🚀 FastAPI app starting...")
 
-    # 🧹 1️⃣ Clear old cron locks (avoid duplicate schedules after restart)
+    # 🧹 Clear stale cron locks
     try:
         keys = await redis_client.keys("cron_lock:*")
         if keys:
@@ -59,14 +79,18 @@ async def on_startup():
     except Exception as e:
         print(f"⚠️ Failed to clear cron locks: {e}")
 
-    # 🧹 2️⃣ Cancel any orphaned async tasks from previous run
+    # 💀 Stop orphan cron jobs
     for name, task in list(workers.active_cron_jobs.items()):
         if not task.done():
             task.cancel()
             print(f"💀 Stopped orphan cron task: {name}")
         workers.active_cron_jobs.pop(name, None)
 
-    # 🚀 3️⃣ Start background worker if enabled
+    # 🧠 Start background tasks
+    asyncio.create_task(metrics_broadcaster())
+    asyncio.create_task(intelligence.intelligence_loop(interval=5.0))
+
+    # 🚀 Start background worker if enabled
     if settings.RUN_WORKER:
         print("🧠 RUN_WORKER=True → Starting background worker automatically")
         worker_task = asyncio.create_task(workers.worker_loop("default_worker"))

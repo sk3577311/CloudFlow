@@ -1,11 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends, Security, status
+from fastapi import APIRouter, HTTPException, Depends, Security, status,Header
 from fastapi.security.api_key import APIKeyHeader
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import jwt
 from pydantic import BaseModel
 import secrets
+import time
 from typing import Optional
+from datetime import datetime,timedelta
+
+from app.redis_client import redis_client
 
 from .database import get_db
 from .models import User
@@ -56,7 +60,10 @@ async def verify_api_key(x_api_key: str = Security(api_key_header)):
 # JWT UTILITIES
 # --------------------------------------
 def create_access_token(data: dict):
-    return jwt.encode(data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def get_current_user(db: Session = Depends(get_db), token: str = None):
     if not token:
@@ -117,3 +124,22 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "api_key": user.api_key,
         "username": user.username
     }
+
+@router.post("/logout")
+async def logout(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
+
+    token = authorization.split(" ", 1)[1]
+
+    try:
+        # If you have the token expiry, set TTL accordingly. Here we set a 1 hour fallback.
+        await redis_client.setex(f"blacklist:{token}", 3600, "1")
+    except Exception as e:
+        # Log and return 500 — you can optionally fallback to client-side logout instead of failing
+        # (but failing explicitly helps detect issues).
+        # Replace print with your logger as needed.
+        print("redis setex failed:", e)
+        raise HTTPException(status_code=500, detail="Failed to record logout")
+
+    return {"message": "Logged out"}

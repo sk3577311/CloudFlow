@@ -1,10 +1,10 @@
 "use client";
-import { RefreshCw, Bell, User, LogOut, Sun, Moon } from "lucide-react";
+
+import { RefreshCw, User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { clearToken } from "@/lib/auth";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useCallback, useRef, useState } from "react";
 import AlertsBell from "./AlertsBell";
+import HealthBadge from "./HealthBadge";
 
 interface TopBarProps {
   title: string;
@@ -16,92 +16,68 @@ interface TopBarProps {
 export default function TopBar({ title, onRefresh, loading, lastUpdate }: TopBarProps) {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
-  const [theme, setTheme] = useState("light");
+  const logoutGuardRef = useRef(false);
 
-  const handleLogout = () => {
-    clearToken();
-    router.push("/login");
-  };
+  const handleLogout = useCallback(() => {
+    if (logoutGuardRef.current) return;
+    logoutGuardRef.current = true;
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-  };
+    setShowMenu(false);
 
-  useEffect(() => {
-    if (!loading && lastUpdate) {
-      toast.success(`✅ Updated successfully at ${lastUpdate}`, {
-        duration: 2500,
-        style: { background: "#f9fafb", border: "1px solid #d1d5db" },
-      });
-    }
-  }, [loading, lastUpdate]);
+    // 🚨 IMPORTANT: Only navigate. Do NOT clear token from here.
+    router.push("/reloading?mode=logout");
+  }, [router]);
 
   return (
     <header
-      className={`flex justify-between items-center h-16 px-6 transition-all sticky top-0 z-40 ${
-        loading
-          ? "bg-indigo-50 dark:bg-neutral-800 animate-pulse"
-          : "bg-white dark:bg-neutral-900 shadow-sm"
-      }`}
+      className="
+        tf-card rounded-[22px] px-6 py-4 sticky top-4 z-40 mx-6 
+        flex justify-between items-center backdrop-blur-lg
+        bg-[var(--tf-card)]/90 border border-[var(--tf-border)]
+      "
     >
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{title}</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Dashboard / {title}</p>
+      <div className="flex flex-col">
+        <h1 className="text-xl font-semibold text-white flex items-center gap-2">
+          {title} <HealthBadge />
+        </h1>
+        <p className="text-sm text-[var(--tf-text-dim)]">Dashboard / {title}</p>
       </div>
 
-      <div className="flex items-center gap-4 relative">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
-        >
-          {theme === "light" ? (
-            <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          ) : (
-            <Sun className="w-5 h-5 text-yellow-400" />
-          )}
-        </button>
-
-        {/* Refresh */}
+      <div className="flex items-center gap-4">
         <button
           onClick={onRefresh}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition shadow-sm ${
-            loading
-              ? "bg-indigo-50 border-indigo-200 text-indigo-500 cursor-not-allowed"
-              : "bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 hover:shadow-md"
-          }`}
+          className="
+            px-4 py-2 rounded-xl bg-[#1E1F22] border border-[var(--tf-border)]
+            hover:bg-[#2a2c2f] transition flex items-center gap-2
+            disabled:opacity-50
+          "
         >
-          <RefreshCw
-            className={`w-5 h-5 transition ${
-              loading ? "animate-spin text-indigo-500" : "text-gray-700 dark:text-gray-300"
-            }`}
-          />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin text-[#00E3E3]" : "text-white"}`} />
+          <span className="text-sm text-white/80">
             {loading ? "Refreshing..." : `Updated ${lastUpdate}`}
           </span>
         </button>
 
-        {/* Notifications */}
         <AlertsBell />
 
-        {/* User */}
-        <div
-          className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 px-3 py-2 rounded-lg transition relative"
-          onClick={() => setShowMenu((prev) => !prev)}
-        >
-          <User className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-          <span className="text-gray-700 dark:text-gray-200 font-medium">Admin</span>
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu((s) => !s)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1E1F22] hover:bg-[#2a2c2f] transition"
+          >
+            <User className="w-5 h-5 text-white/80" />
+            <span className="text-white/90 font-medium hidden sm:block">Admin</span>
+          </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-12 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-md w-40 py-2">
+            <div className="absolute right-0 mt-2 tf-card rounded-[18px] p-3 w-36 border border-[var(--tf-border)]">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-neutral-700 transition"
+                className="w-full text-left px-3 py-2 rounded-lg text-red-400 hover:bg-[#2a2c2f] transition flex items-center gap-2"
               >
-                <LogOut className="w-4 h-4" /> Logout
+                <LogOut className="w-4 h-4" />
+                Logout
               </button>
             </div>
           )}

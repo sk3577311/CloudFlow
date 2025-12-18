@@ -480,21 +480,34 @@ export default function JobsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
               {[
-                { label: "Total Jobs", value: stats.total, color: "from-indigo-500 to-indigo-600" },
-                { label: "Queued", value: stats.queued, color: "from-yellow-400 to-amber-500" },
-                { label: "Completed", value: stats.completed, color: "from-green-500 to-emerald-600" },
-                { label: "Failed", value: stats.failed, color: "from-red-500 to-rose-600" },
+                { label: "Total Jobs", value: stats.total, color: "#C8EDF2" },
+                { label: "Queued", value: stats.queued, color: "#F2DCA3" },
+                { label: "Completed", value: stats.completed, color: "#A9F2C8" },
+                { label: "Failed", value: stats.failed, color: "#F5A3A3" },
               ].map((c) => (
                 <motion.div
                   key={c.label}
                   whileHover={{ scale: 1.02 }}
-                  className={`p-6 rounded-2xl bg-gradient-to-br ${c.color} text-white shadow-sm dark:shadow-md transition-transform`}
+                  className="p-6 rounded-2xl tf-card shadow-md relative"
                 >
-                  <h2 className="text-sm opacity-80 mb-2">{c.label}</h2>
-                  <p className="text-4xl font-bold">{c.value}</p>
+                  {/* Accent dot */}
+                  <div
+                    className="absolute top-4 right-4 w-2 h-2 rounded-full"
+                    style={{ background: c.color }}
+                  />
+
+                  <h2 className="text-sm text-[var(--tf-text-dim)] mb-2">{c.label}</h2>
+
+                  <p
+                    className="text-4xl font-bold"
+                    style={{ color: c.color }}
+                  >
+                    {c.value}
+                  </p>
                 </motion.div>
               ))}
             </div>
+
           )}
 
           {/* Chart */}

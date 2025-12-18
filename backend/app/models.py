@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Text,JSON,Float,func
 from sqlalchemy.orm import relationship
 from .database import Base
 import enum
@@ -81,3 +81,22 @@ class Worker(Base):
     current_job = Column(String, nullable=True)
     uptime = Column(Integer, default=0)
     last_heartbeat = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    event = Column(Text, nullable=False)
+    actor = Column(String, default="SYSTEM")
+    meta = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Anomaly(Base):
+    __tablename__ = "anomalies"
+    id = Column(Integer, primary_key=True, index=True)
+    target = Column(String, index=True)        # 'cpu','memory','queue_delay','job_fail_rate'
+    ts = Column(DateTime(timezone=True), server_default=func.now())
+    value = Column(Float, nullable=True)
+    baseline = Column(Float, nullable=True)
+    severity = Column(String, default="medium")
+    details = Column(JSON, nullable=True)
