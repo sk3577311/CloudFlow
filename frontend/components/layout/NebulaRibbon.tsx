@@ -12,7 +12,7 @@ import {
   Settings,
   ChevronLeft,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const NAV = [
   { name: "Overview", href: "/dashboard/", icon: Home },
@@ -39,30 +39,16 @@ export default function NebulaRibbon({
   }
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.25 }}
+    <aside
       className="
-        fixed z-40 top-8 bottom-8 left-5
-        rounded-2xl border border-[var(--tf-border)]
-        bg-[rgba(255,255,255,0.02)]
-        shadow-[0_0_30px_rgba(0,0,0,0.25)]
-        backdrop-blur-md
-        transition-all duration-300 overflow-hidden
+        fixed z-40 top-0 bottom-0 left-0 bg-[#0b0d10] border-r border-white/5 transition-[width]
       "
-      style={{ width: expanded ? 180 : 72 }}
-      onMouseEnter={() => setExpandState(true)}
-      onMouseLeave={() => setExpandState(false)}
+      style={{ width: expanded ? 200 : 72 }}
     >
       <div className="flex flex-col h-full">
-
         {/* BRAND */}
         <div className="flex items-center gap-3 p-4">
-          <div className="
-            w-10 h-10 rounded-xl bg-white/10 
-            flex items-center justify-center
-          ">
+          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
             <span className="font-semibold text-white">TF</span>
           </div>
 
@@ -87,12 +73,14 @@ export default function NebulaRibbon({
                 key={item.href}
                 href={item.href}
                 className={`
-                  group flex items-center gap-3
+                  group flex items-center
                   px-3 py-2.5 rounded-xl
                   transition-all duration-150 relative
-                  ${active
-                    ? "bg-white/10 border border-white/10 text-white"
-                    : "hover:bg-white/5 text-white/70"
+                  ${expanded ? "gap-3 justify-start" : "justify-center"}
+                  ${
+                    active
+                      ? "bg-white/10 border border-white/10 text-white"
+                      : "hover:bg-white/5 text-white/70"
                   }
                 `}
               >
@@ -104,7 +92,7 @@ export default function NebulaRibbon({
                   }`}
                 />
 
-                {/* Label when expanded */}
+                {/* Label (expanded only) */}
                 {expanded && (
                   <div className="flex flex-col">
                     <span className="text-sm">{item.name}</span>
@@ -114,7 +102,7 @@ export default function NebulaRibbon({
                   </div>
                 )}
 
-                {/* Tooltip when collapsed */}
+                {/* Tooltip (collapsed only) */}
                 {!expanded && (
                   <span
                     className="
@@ -122,7 +110,8 @@ export default function NebulaRibbon({
                       group-hover:left-20 group-hover:opacity-100
                       transition-all duration-200
                       bg-black text-white text-xs
-                      border border-white/10 px-2 py-1 rounded-md
+                      border border-white/10
+                      px-2 py-1 rounded-md
                       whitespace-nowrap
                       pointer-events-none
                     "
@@ -135,20 +124,54 @@ export default function NebulaRibbon({
           })}
         </div>
 
+        {/* PROFILE */}
+        <div className="px-2 mb-2">
+          <button
+            className={`
+              w-full flex items-center
+              ${expanded ? "gap-3 px-3" : "justify-center"}
+              py-2 rounded-xl
+              bg-white/5 hover:bg-white/10
+              transition
+            `}
+          >
+            {/* Avatar */}
+            <div
+              className="
+              w-8 h-8 rounded-full
+              bg-white/20
+              flex items-center justify-center
+              text-sm font-semibold text-white
+            "
+            >
+              A
+            </div>
+
+            {/* Info (expanded only) */}
+            {expanded && (
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm text-white">Admin</span>
+                <span className="text-[11px] text-[var(--tf-text-dim)]">
+                  admin@taskflow
+                </span>
+              </div>
+            )}
+          </button>
+        </div>
+
         {/* COLLAPSE BUTTON */}
         <button
           onClick={() => setExpandState(!expanded)}
-          className="
-            w-full flex items-center gap-2 px-3 py-2 mb-3
-            rounded-lg hover:bg-white/5 transition
-            text-white/60
-          "
+          className="w-full flex items-center gap-2 px-3 py-2 mb-3 rounded-lg hover:bg-white/5 transition text-white/60"
         >
           <ChevronLeft
-            className={`w-5 h-5 transition ${expanded ? "" : "rotate-180"}`}
+            className={`w-5 h-5 transition-transform ${
+              expanded ? "" : "rotate-180"
+            }`}
           />
+          {expanded && <span className="text-sm">Collapse</span>}
         </button>
       </div>
-    </motion.aside>
+    </aside>
   );
 }
