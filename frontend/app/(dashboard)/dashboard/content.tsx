@@ -14,18 +14,20 @@ import JobModal from "./components/JobModal";
 import InsightsPanel from "./components/insights/InsightsPanel";
 
 // lazy heavy charts
-const LineChartSection = dynamic(() => import("./components/Charts/LineChartSection"), {
-  ssr: false,
-  loading: () => <div className="h-[350px] bg-neutral-100 dark:bg-neutral-900 rounded-2xl animate-pulse" />,
-});
-const PieChartSection = dynamic(() => import("./components/Charts/PieChartSection"), {
-  ssr: false,
-  loading: () => <div className="h-[350px] bg-neutral-100 dark:bg-neutral-900 rounded-2xl animate-pulse" />,
-});
-const SystemMetricsSection = dynamic(() => import("./components/Charts/SystemMetricsSection"), {
-  ssr: false,
-  loading: () => <div className="h-[250px] bg-neutral-100 dark:bg-neutral-900 rounded-2xl animate-pulse" />,
-});
+const LineChartSection = dynamic(
+  () => import("./components/Charts/LineChartSection"),
+  { ssr: false }
+);
+
+const PieChartSection = dynamic(
+  () => import("./components/Charts/PieChartSection"),
+  { ssr: false }
+);
+
+const SystemMetricsSection = dynamic(
+  () => import("./components/Charts/SystemMetricsSection"),
+  { ssr: false }
+);
 
 interface Job {
   id: string;
@@ -46,35 +48,26 @@ export default function DashboardContent() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [retrying, setRetrying] = useState(false);
 
-  const [cpuData, setCpuData] = useState<{ time: string; value: number; trend?: "up" | "down" | "steady" }[]>([]);
-  const [memoryData, setMemoryData] = useState<{ time: string; value: number; trend?: "up" | "down" | "steady" }[]>([]);
+  const [cpuData, setCpuData] = useState<any[]>([]);
+  const [memoryData, setMemoryData] = useState<any[]>([]);
 
-  // --- WebSocket metrics sink ---
   const onWsMessage = useCallback((payload: any) => {
     if (!payload || payload.type !== "metrics") return;
-    const d = payload.data || {};
     const ts = new Date().toLocaleTimeString();
 
-    // CPU
-    setCpuData(prev => {
-      const prevVal = prev.at(-1)?.value ?? 0;
-      const val = typeof d.cpu === "number" ? d.cpu : prevVal;
-      const trend = val > prevVal ? "up" : val < prevVal ? "down" : "steady";
-      return [...prev.slice(-19), { time: ts, value: val, trend }];
-    });
+    setCpuData((prev) => [
+      ...prev.slice(-19),
+      { time: ts, value: payload.data?.cpu ?? 0 },
+    ]);
 
-    // Memory
-    setMemoryData(prev => {
-      const prevVal = prev.at(-1)?.value ?? 0;
-      const val = typeof d.memory === "number" ? d.memory : prevVal;
-      const trend = val > prevVal ? "up" : val < prevVal ? "down" : "steady";
-      return [...prev.slice(-19), { time: ts, value: val, trend }];
-    });
+    setMemoryData((prev) => [
+      ...prev.slice(-19),
+      { time: ts, value: payload.data?.memory ?? 0 },
+    ]);
   }, []);
 
   useMetricsSocket(onWsMessage);
 
-  // --- Jobs fetch (HTTP) ---
   async function fetchJobs(triggeredByRefresh = false) {
     try {
       if (!triggeredByRefresh) setLoading(true);
@@ -83,20 +76,11 @@ export default function DashboardContent() {
       const res = await fetch(`${API}/jobs/`, {
         headers: { "x-api-key": "supersecret123" },
       });
+
       if (!res.ok) throw new Error("Failed to fetch jobs");
-
       const data: Job[] = await res.json();
-      const enriched = data.map((job) => ({
-        ...job,
-        history: [
-          { status: "queued", time: job.created_at || "" },
-          ...(job.status !== "queued" ? [{ status: job.status, time: job.updated_at || "" }] : []),
-        ],
-      }));
-
-      setJobs(enriched);
+      setJobs(data);
     } catch (err) {
-      console.error(err);
       showToast("❌ Failed to fetch jobs!", "error");
     } finally {
       setLoading(false);
@@ -110,40 +94,51 @@ export default function DashboardContent() {
     return () => unsub();
   }, [subscribe]);
 
-  const cpuTrend = cpuData.at(-1)?.trend ?? "steady";
-  const memoryTrend = memoryData.at(-1)?.trend ?? "steady";
-
   return (
-  <div className="transition-colors duration-300 md:px-0 max-w-7xl mx-auto">
-    <MetricsGrid
-      jobs={jobs}
-      cpuData={cpuData}
-      memoryData={memoryData}
-      loading={loading}
-      cpuTrend={cpuTrend}
-      memoryTrend={memoryTrend}
-    />
+    /**
+     * IMPORTANT:
+     * - FULL width canvas
+     * - NO max-width here
+     * - NO centering
+     */
+    <div className="w-full px-6">
+      {/* 
+      Inner canvas controls density,
+      NOT the page itself
+    */}
+      <div className="mx-auto max-w-[1440px]">
+        <MetricsGrid
+          jobs={jobs}
+          cpuData={cpuData}
+          memoryData={memoryData}
+          loading={loading}
+        />
 
-    <FiltersBar filter={filter} setFilter={setFilter} />
+        <FiltersBar filter={filter} setFilter={setFilter} />
 
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-10">
-      <LineChartSection jobs={jobs} />
-      <PieChartSection jobs={jobs} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-10">
+          <LineChartSection jobs={jobs} />
+          <PieChartSection jobs={jobs} />
+        </div>
+
+        <SystemMetricsSection cpuData={cpuData} memoryData={memoryData} />
+
+        <InsightsPanel />
+
+        <h2 className="text-xl font-semibold text-white mb-6 mt-6">
+          💻 Jobs Tables
+        </h2>
+
+        <JobsTable jobs={jobs} filter={filter} onSelectJob={setSelectedJob} />
+
+        {selectedJob && (
+          <JobModal
+            job={selectedJob}
+            onClose={() => setSelectedJob(null)}
+            retrying={retrying}
+          />
+        )}
+      </div>
     </div>
-
-    <SystemMetricsSection cpuData={cpuData} memoryData={memoryData} />
-    <InsightsPanel />
-
-    <h2 className="text-xl font-semibold text-white mb-6 mt-6">
-      💻 Jobs Tables
-    </h2>
-
-    <JobsTable jobs={jobs} filter={filter} onSelectJob={setSelectedJob} />
-
-    {selectedJob && (
-      <JobModal job={selectedJob} onClose={() => setSelectedJob(null)} retrying={retrying} />
-    )}
-  </div>
-);
-
+  );
 }
