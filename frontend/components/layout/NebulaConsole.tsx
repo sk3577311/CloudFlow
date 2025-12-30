@@ -6,17 +6,6 @@ import AlertsBell from "../AlertsBell";
 import HealthBadge from "../HealthBadge";
 import { useRouter } from "next/navigation";
 
-/**
- * NebulaConsole (Vercel-Style)
- * -----------------------------------------
- * - Flat black
- * - Thin 1px border (#1a1a1a)
- * - No blur, no gradients, no glow
- * - Clean spacing like Vercel dashboard
- * - Sticky on scroll
- * - Works with dynamic ribbon width
- */
-
 export default function NebulaConsole({
   onRefresh,
   loading,
@@ -36,93 +25,101 @@ export default function NebulaConsole({
   const handleLogout = useCallback(() => {
     if (logoutGuard.current) return;
     logoutGuard.current = true;
-
     setMenuOpen(false);
     router.push("/reloading?mode=logout");
   }, [router]);
 
   return (
     <div
-      className="
-        sticky top-6 z-50 pointer-events-none
-      "
+      className="sticky top-4 z-50 pointer-events-none"
       style={{
-        marginLeft: "calc(var(--tf-ribbon-width) + 20px)",
-        marginRight: "28px",
+        marginLeft: "calc(var(--tf-ribbon-width) + 24px)",
+        marginRight: "24px",
       }}
     >
-      <div className="max-w-6xl mx-auto pointer-events-auto">
+      <div className="mx-auto max-w-[1440px] pointer-events-auto">
         <div
           className="
-            flex items-center justify-between
-            rounded-full px-5 py-3
-            bg-[#111]
-            border border-[#1a1a1a]
+            relative flex items-center justify-between
+            px-6 py-3
+            bg-[#0b0d10]
+            border border-white/5
+            rounded-xl
             text-sm
           "
         >
-          {/* LEFT SIDE */}
+          {/* ACTIVITY MARKER (signature detail) */}
+          <div
+            className={`
+              absolute left-0 top-0 bottom-0 w-[2px]
+              transition-colors duration-300
+              ${loading ? "bg-emerald-400" : "bg-white/10"}
+            `}
+          />
+
+          {/* LEFT */}
           <div className="flex items-center gap-4">
-            {/* BRAND CUBE */}
-            <div className="w-8 h-8 rounded-md bg-[#111] flex items-center justify-center font-semibold text-white">
+            <div className="w-8 h-8 rounded-md bg-[#111] flex items-center justify-center font-semibold">
               TF
             </div>
 
-            {/* TITLE + STATUS */}
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 font-medium text-white">
-                {title} <HealthBadge />
+              <div className="flex items-center gap-2 font-medium">
+                {title}
+                <HealthBadge />
               </div>
-              <span className="text-xs text-[#666]">
+              <span className="text-xs text-white/40">
                 Updated {lastUpdate ?? "--"}
               </span>
             </div>
-
-            {/* STATUS PILL (like Vercel "Healthy") */}
-            <div className="hidden md:block text-xs text-[#888] px-2.5 py-1 rounded-md bg-[#111]">
-              Connected
-            </div>
           </div>
 
-          {/* SEARCH (center) */}
-          <div className="flex-1 px-8 hidden md:block">
+          {/* SEARCH */}
+          <div className="flex-1 px-10 hidden md:block">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tasks, jobs, workers…"
+              placeholder="Search jobs, tasks, workers…"
               className="
-                w-full bg-[#0b0b0b] border border-[#1a1a1a]
-                rounded-md px-3 py-1.5 outline-none text-sm
-                text-white placeholder:text-[#555]
-                focus:bg-[#0c0c0c] focus:border-[#333]
+                w-full bg-transparent
+                border border-white/5
+                rounded-md px-3 py-1.5
+                text-sm text-white
+                placeholder:text-white/30
+                focus:outline-none
+                focus:border-white/15
               "
             />
           </div>
 
-          {/* RIGHT-ACTIONS */}
+          {/* ACTIONS */}
           <div className="flex items-center gap-2">
-            {/* REFRESH */}
             <button
               onClick={() => onRefresh?.()}
               disabled={loading}
               className="
-                p-2 rounded-md border border-[#1a1a1a]
-                bg-[#0b0b0b] hover:bg-[#111]
-                transition
+                p-2 rounded-md
+                border border-white/5
+                hover:bg-white/5 transition
               "
             >
               <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin text-white" : "text-gray-200"
-                  }`}
+                className={`w-4 h-4 ${
+                  loading ? "animate-spin text-white" : "text-white/70"
+                }`}
               />
             </button>
 
-            {/* ACTION */}
-            <button className="p-2 rounded-md border border-[#1a1a1a] bg-[#0b0b0b] hover:bg-[#111] transition">
-              <Zap className="w-4 h-4 text-gray-300" />
+            <button
+              className="
+                p-2 rounded-md
+                border border-white/5
+                hover:bg-white/5 transition
+              "
+            >
+              <Zap className="w-4 h-4 text-white/70" />
             </button>
 
-            {/* ALERTS */}
             <AlertsBell />
 
             {/* USER */}
@@ -130,31 +127,33 @@ export default function NebulaConsole({
               <button
                 onClick={() => setMenuOpen((s) => !s)}
                 className="
-                  p-2 pl-3 pr-3 rounded-md border border-[#1a1a1a]
-                  bg-[#0b0b0b] hover:bg-[#111] transition
                   flex items-center gap-2
+                  px-3 py-2 rounded-md
+                  border border-white/5
+                  hover:bg-white/5 transition
                 "
               >
-                <User className="w-4 h-4 text-gray-300" />
-                <span className="hidden sm:block text-sm text-gray-200">
-                  Admin
-                </span>
+                <User className="w-4 h-4 text-white/70" />
+                <span className="hidden sm:block text-sm">Admin</span>
               </button>
 
-              {/* DROPDOWN */}
               {menuOpen && (
                 <div
                   className="
-                    absolute right-0 mt-2 p-2 w-40
-                    bg-[#0a0a0a] border border-[#1a1a1a]
-                    rounded-md text-sm
+                    absolute right-0 mt-2 w-44
+                    bg-[#0b0d10]
+                    border border-white/5
+                    rounded-md
+                    shadow-lg
                   "
                 >
                   <button
                     onClick={handleLogout}
                     className="
-                      w-full flex items-center gap-2 px-3 py-2
-                      text-red-400 hover:bg-[#111] rounded-md transition
+                      w-full flex items-center gap-2
+                      px-3 py-2 text-sm
+                      text-red-400
+                      hover:bg-white/5 transition
                     "
                   >
                     <LogOut className="w-4 h-4" />
