@@ -6,7 +6,7 @@
   --tf-ribbon-width: 72px;
   /* collapsed */
   --tf-ribbon-width-expanded: 220px;
-  --tf-ribbon-offset: 72px;
+  /* --tf-ribbon-offset: 72px; */
   /* default layout left padding */
 
   /* Vercel minimal palette */
@@ -24,7 +24,6 @@
   /* Text */
   --tf-text-dim: #9ba3af;
 
-
   /* Radiuses */
   --tf-radius-md: 12px;
   --tf-radius-lg: 18px;
@@ -35,7 +34,7 @@ html,
 body {
   background: var(--tf-bg) !important;
   color: var(--tf-text) !important;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
@@ -52,18 +51,18 @@ body {
   --accent: var(--tf-accent);
   --input: var(--tf-border);
   --ring: var(--tf-accent);
+  --tf-ribbon-offset: 220px;
 }
 
-/* core tf-card */
 .tf-card {
-  background: var(--tf-card);
-  border-radius: 22px;
-  padding: 20px;
-  border: 1px solid var(--tf-border);
-  box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.55),
-    -8px -8px 20px rgba(255, 255, 255, 0.03);
-  transition: box-shadow .18s ease, transform .12s ease;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 /* light highlight card (mint) */
@@ -121,4 +120,15 @@ select {
 /* Sizing safety */
 .min-h-screen {
   min-height: 100vh;
+}
+.dashboard-canvas {
+  width: 100%;
+  max-width: 1280px; /* matches reference density */
+}
+
+/* optional: slightly wider on huge screens */
+@media (min-width: 1600px) {
+  .dashboard-canvas {
+    max-width: 1400px;
+  }
 }
